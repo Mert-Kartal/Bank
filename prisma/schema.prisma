@@ -20,19 +20,19 @@ model User {
   username    String        @unique
   password    String
   createdAt   DateTime      @default(now())
-  deletedAt   DateTime      @default(now())
+  deletedAt   DateTime?
   Account     Account[]
   Transaction Transaction[]
 }
 
 model Account {
-  id        Int      @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   name      String
   ownerId   Int
-  balance   Float    @default(0)
-  createdAt DateTime @default(now())
-  deletedAt DateTime @default(now())
-  owner     User     @relation(fields: [ownerId], references: [id])
+  balance   Float     @default(0)
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+  owner     User      @relation(fields: [ownerId], references: [id])
 
   transactionsFrom Transaction[] @relation("FromAccount")
   transactionsTo   Transaction[] @relation("ToAccount")

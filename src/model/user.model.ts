@@ -2,18 +2,25 @@ import prisma from "src/db";
 import bcrypt from "bcrypt";
 
 import { UserReqBody } from "src/types";
-import { partialReqBody } from "src/types";
+type partialReqBody = Partial<UserReqBody>;
 
 async function hashPassword(password: string): Promise<string> {
   return await bcrypt.hash(password, 10);
 }
 export default class UserModel {
-  static async create(payload: UserReqBody): Promise<UserReqBody> {
+  static async create(
+    firstname: string,
+    lastname: string,
+    username: string,
+    password: string
+  ): Promise<UserReqBody> {
     try {
-      const hashedPassword = await hashPassword(payload.password);
+      const hashedPassword = await hashPassword(password);
       const user = await prisma.user.create({
         data: {
-          ...payload,
+          firstname,
+          lastname,
+          username,
           password: hashedPassword,
           createdAt: new Date(),
         },

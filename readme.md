@@ -16,6 +16,11 @@ Params:
 GET /users
 (No params, tüm kullanıcıları getirir)
 
+GET /users/:id/accounts // yapılacak
+Params:
+- userId: number (Belirli bir kullanıcının hesaplarını getirir)
+
+
 PUT /users/:id
 Params:
 - id: number (Kullanıcı ID'si)
@@ -40,15 +45,13 @@ Body:
   "balance": 1000.50
 }
 
-POST /accounts/deposit
+POST /accounts/:id/deposit
 Body:{
-  "accountId": 1,
   "amount": 500.00
 }
 
-POST /accounts/withdraw
+POST /accounts/:id/withdraw
 Body:{
-  "accountId": 1,
   "amount": 500.00
 }
 
@@ -56,9 +59,6 @@ GET /accounts/:id
 Params:
 - id: number (Hesap ID'si)
 
-GET /accounts/user/:userId
-Params:
-- userId: number (Belirli bir kullanıcının hesaplarını getirir)
 
 PUT /accounts/:id
 Params:

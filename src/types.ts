@@ -5,4 +5,8 @@ export interface UserReqBody {
   password: string;
 }
 
-export type partialReqBody = Partial<UserReqBody>;
+export interface AccountReqBody {
+  name: string;
+  ownerId: number;
+  balance: number;
+}
