@@ -40,6 +40,18 @@ Body:
   "balance": 1000.50
 }
 
+POST /accounts/deposit
+Body:{
+  "accountId": 1,
+  "amount": 500.00
+}
+
+POST /accounts/withdraw
+Body:{
+  "accountId": 1,
+  "amount": 500.00
+}
+
 GET /accounts/:id
 Params:
 - id: number (Hesap ID'si)
