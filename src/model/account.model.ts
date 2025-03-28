@@ -63,4 +63,17 @@ export default class AccountModel {
       throw error;
     }
   }
+
+  static async getTrxByAccount(accountId: number) {
+    try {
+      const transactions = await prisma.transaction.findMany({
+        where: {
+          OR: [{ fromAccountId: accountId }, { toAccountId: accountId }],
+        },
+      });
+      return transactions;
+    } catch (error) {
+      throw error;
+    }
+  }
 }

@@ -6,6 +6,7 @@ router.post("/", AccountController.create);
 router.post("/:id/deposit", AccountController.deposit);
 router.post("/:id/withdraw", AccountController.withdraw);
 router.get("/:id", AccountController.getById);
+router.get("/:id/transactions", AccountController.getTransactions);
 router.patch("/:id", AccountController.update);
 router.delete("/:id", AccountController.delete);
 

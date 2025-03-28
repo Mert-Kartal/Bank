@@ -82,4 +82,44 @@ export default class UserModel {
       throw error;
     }
   }
+
+  static async getTrxByUser(id: number) {
+    try {
+      const userAccounts = await prisma.account.findMany({
+        where: { ownerId: id },
+        select: { id: true },
+      });
+      console.log(userAccounts);
+      const accountIds = userAccounts.map((account) => account.id);
+      console.log(accountIds);
+      if (accountIds.length === 0) {
+        return [];
+      }
+
+      const transactions = await prisma.transaction.findMany({
+        where: {
+          OR: [
+            { fromAccountId: { in: accountIds } },
+            { toAccountId: { in: accountIds } },
+          ],
+        },
+      });
+      return transactions;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  }
+
+  static async getAccByUser(userId: number) {
+    try {
+      const accounts = await prisma.account.findMany({
+        where: { ownerId: userId },
+      });
+      return accounts;
+    } catch (error) {
+      console.log(error);
+      throw error;
+    }
+  }
 }

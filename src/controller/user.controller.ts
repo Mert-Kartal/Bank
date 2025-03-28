@@ -1,5 +1,7 @@
-import { Prisma } from "@prisma/client";
-import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
+import {
+  PrismaClientKnownRequestError,
+  PrismaClientValidationError,
+} from "@prisma/client/runtime/library";
 import { Request, Response } from "express";
 import UserModel from "src/model/user.model";
 import { UserReqBody } from "src/types";
@@ -37,7 +39,7 @@ export default class UserController {
       res.status(201).json({ createUser });
     } catch (error) {
       console.log(error);
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === "P2002") {
           res.status(400).json({
             error: "this username is taken",
@@ -45,7 +47,7 @@ export default class UserController {
           return;
         }
       }
-      if (error instanceof Prisma.PrismaClientValidationError) {
+      if (error instanceof PrismaClientValidationError) {
         res.status(400).json({
           error: "missing data",
         });
@@ -67,7 +69,7 @@ export default class UserController {
     try {
       const getUser = await UserModel.getById(+id);
 
-      if (!getUser) {
+      if (!getUser || getUser.deletedAt) {
         res.status(404).json({ error: "no data" });
         return;
       }
@@ -94,7 +96,6 @@ export default class UserController {
     }
   }
 
-  //dön bak
   static async update(
     req: Request<
       { id: string },
@@ -119,12 +120,7 @@ export default class UserController {
       return;
     }
 
-    const whiteList = [
-      "firstname",
-      "lastname",
-      "username",
-      "password",
-    ] as const;
+    const whiteList = ["firstname", "lastname", "username"] as const;
 
     try {
       const whiteListPayload: partialReqBody = {};
@@ -148,8 +144,6 @@ export default class UserController {
           });
           return;
         }
-      }
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === "P2002") {
           res.status(400).json({
             error: "this username is taken",
@@ -157,7 +151,8 @@ export default class UserController {
           return;
         }
       }
-      if (error instanceof Prisma.PrismaClientValidationError) {
+
+      if (error instanceof PrismaClientValidationError) {
         res.status(400).json({
           error: "missing data",
         });
@@ -191,6 +186,53 @@ export default class UserController {
           return;
         }
       }
+      res.status(500).json({ error: "somwething went wrong" });
+    }
+  }
+
+  static async getTransactions(req: Request<{ id: string }>, res: Response) {
+    const id = req.params.id;
+
+    if (id === ":id" || isNaN(+id)) {
+      res.status(400).json({
+        error: "invalid id",
+      });
+      return;
+    }
+    try {
+      const getUserTransactions = await UserModel.getTrxByUser(+id);
+
+      if (getUserTransactions.length === 0) {
+        res.status(404).json({ error: "no data" });
+        return;
+      }
+
+      res.status(200).json({ getUserTransactions });
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ error: "somwething went wrong" });
+    }
+  }
+
+  static async getAccounts(req: Request<{ id: string }>, res: Response) {
+    const id = req.params.id;
+
+    if (id === ":id" || isNaN(+id)) {
+      res.status(400).json({
+        error: "invalid id",
+      });
+      return;
+    }
+    try {
+      const getUserAccounts = await UserModel.getAccByUser(+id);
+      if (getUserAccounts.length === 0) {
+        res.status(404).json({ error: "no data" });
+        return;
+      }
+
+      res.status(200).json({ getUserAccounts });
+    } catch (error) {
+      console.log(error);
       res.status(500).json({ error: "somwething went wrong" });
     }
   }

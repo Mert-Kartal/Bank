@@ -48,7 +48,7 @@ export default class AccountController {
 
       const getAccount = await AccountModel.getById(+id);
 
-      if (!getAccount) {
+      if (!getAccount || getAccount.deletedAt) {
         res.status(404).json({ error: "no data" });
         return;
       }
@@ -177,14 +177,14 @@ export default class AccountController {
   }
 
   static async delete(req: Request<{ id: string }>, res: Response) {
+    const id = req.params.id;
+    if (id === ":id" || isNaN(+id)) {
+      res.status(400).json({
+        error: "invalid id",
+      });
+      return;
+    }
     try {
-      const id = req.params.id;
-      if (id === ":id" || isNaN(+id)) {
-        res.status(400).json({
-          error: "invalid id",
-        });
-        return;
-      }
       const deletedUser = await AccountModel.delete(+id);
 
       res.status(200).json({ deletedUser });
@@ -201,5 +201,24 @@ export default class AccountController {
 
       res.status(500).json({ error: "somwething went wrong" });
     }
+  }
+
+  static async getTransactions(req: Request, res: Response) {
+    const id = req.params.id;
+    if (id === ":id" || isNaN(+id)) {
+      res.status(400).json({
+        error: "invalid id",
+      });
+      return;
+    }
+    try {
+      const getAccountTransactions = await AccountModel.getTrxByAccount(+id);
+      if (getAccountTransactions.length === 0) {
+        res.status(404).json({ error: "no data" });
+        return;
+      }
+
+      res.status(200).json({ getAccountTransactions });
+    } catch (error) {}
   }
 }

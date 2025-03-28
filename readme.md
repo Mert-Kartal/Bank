@@ -16,7 +16,7 @@ Params:
 GET /users
 (No params, tüm kullanıcıları getirir)
 
-GET /users/:id/accounts // yapılacak
+GET /users/:id/accounts 
 Params:
 - userId: number (Belirli bir kullanıcının hesaplarını getirir)
 
@@ -34,6 +34,10 @@ Body:
 DELETE /users/:id
 Params:
 - id: number (Kullanıcı ID'si)
+
+GET /users/:userId/transactions //yap
+Params:
+- userId: number (Belirli bir kullanıcının yaptığı işlemleri getirir)
 
 
 # Hesap (Account) Endpointleri
@@ -72,29 +76,28 @@ DELETE /accounts/:id
 Params:
 - id: number (Hesap ID'si)
 
+GET /accounts/:accountId/transactions //yap endpointi
+Params:
+- accountId: number (Belirli bir hesabın işlemlerini getirir)
+
 
 # İşlem (Transaction) Endpointleri
 POST /transactions
 Body:
+Params:
+- id: number (İşlem ID'si)
+
 {
   "fromAccountId": 1,
   "toAccountId": 2,
-  "amount": 250.75
+  "amount": 250.75,
 }
 
 GET /transactions/:id
 Params:
 - id: number (İşlem ID'si)
 
-GET /transactions/account/:accountId
-Params:
-- accountId: number (Belirli bir hesabın işlemlerini getirir)
 
-GET /transactions/user/:userId
-Params:
-- userId: number (Belirli bir kullanıcının yaptığı işlemleri getirir)
 
-DELETE /transactions/:id
-Params:
-- id: number (İşlem ID'si)
+
 ```
