@@ -4,59 +4,12 @@ import {
 } from "@prisma/client/runtime/library";
 import { Request, Response } from "express";
 import UserModel from "src/model/user.model";
-import { UserReqBody } from "src/types";
+import { UserReqBody } from "src/dto/types";
+import { userUpdateSchema } from "src/validation/user.validation";
+import { z } from "zod";
 type partialReqBody = Partial<UserReqBody>;
 
 export default class UserController {
-  static async create(
-    req: Request<
-      {},
-      {},
-      {
-        firstname: string;
-        lastname: string;
-        username: string;
-        password: string;
-      }
-    >,
-    res: Response
-  ) {
-    if (Object.keys(req.body).length < 4) {
-      res.status(400).json({
-        error: "missing data",
-      });
-      return;
-    }
-    const { firstname, lastname, username, password } = req.body;
-
-    try {
-      const createUser = await UserModel.create(
-        firstname,
-        lastname,
-        username,
-        password
-      );
-      res.status(201).json({ createUser });
-    } catch (error) {
-      console.log(error);
-      if (error instanceof PrismaClientKnownRequestError) {
-        if (error.code === "P2002") {
-          res.status(400).json({
-            error: "this username is taken",
-          });
-          return;
-        }
-      }
-      if (error instanceof PrismaClientValidationError) {
-        res.status(400).json({
-          error: "missing data",
-        });
-        return;
-      }
-      res.status(500).json({ error: "somwething went wrong" });
-    }
-  }
-
   static async getById(req: Request<{ id: string }>, res: Response) {
     const id = req.params.id;
 
@@ -66,6 +19,13 @@ export default class UserController {
       });
       return;
     }
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(401).json({ error: "User not authenticated" });
+      return;
+    }
+
     try {
       const getUser = await UserModel.getById(+id);
 
@@ -81,6 +41,13 @@ export default class UserController {
   }
 
   static async get(req: Request, res: Response) {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(401).json({ error: "User not authenticated" });
+      return;
+    }
+
     try {
       const allUsers = await UserModel.get();
       if (allUsers.length === 0) {
@@ -113,14 +80,16 @@ export default class UserController {
       return;
     }
 
-    if (Object.values(req.body).length < 1) {
-      res.status(400).json({
-        error: "missing data",
-      });
-      return;
-    }
+    const validatedData = userUpdateSchema.parse(req.body);
 
     const whiteList = ["firstname", "lastname", "username"] as const;
+
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(401).json({ error: "User not authenticated" });
+      return;
+    }
 
     try {
       const whiteListPayload: partialReqBody = {};
@@ -137,6 +106,10 @@ export default class UserController {
       res.status(200).json({ updatedUser });
     } catch (error) {
       console.log(error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: error.errors });
+        return;
+      }
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === "P2025") {
           res.status(404).json({
@@ -164,6 +137,13 @@ export default class UserController {
   }
 
   static async delete(req: Request<{ id: string }>, res: Response) {
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(401).json({ error: "User not authenticated" });
+      return;
+    }
+
     try {
       const id = req.params.id;
       if (id === ":id" || isNaN(+id)) {
@@ -199,6 +179,13 @@ export default class UserController {
       });
       return;
     }
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(401).json({ error: "User not authenticated" });
+      return;
+    }
+
     try {
       const getUserTransactions = await UserModel.getTrxByUser(+id);
 
@@ -223,6 +210,13 @@ export default class UserController {
       });
       return;
     }
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(401).json({ error: "User not authenticated" });
+      return;
+    }
+
     try {
       const getUserAccounts = await UserModel.getAccByUser(+id);
       if (getUserAccounts.length === 0) {
@@ -237,3 +231,5 @@ export default class UserController {
     }
   }
 }
+
+// index-> route-> middleware-> validation-> controller-> service-> model

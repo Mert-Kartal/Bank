@@ -1,10 +1,14 @@
-import prisma from "src/db";
+import prisma from "src/config/db";
 
-import { AccountReqBody } from "src/types";
+import { AccountReqBody, TransactionReqBody } from "src/dto/types";
 type partialReqBody = Partial<AccountReqBody>;
 
 export default class AccountModel {
-  static async create(name: string, ownerId: number, balance: number) {
+  static async create(
+    name: string,
+    ownerId: number,
+    balance: number
+  ): Promise<AccountReqBody> {
     try {
       const account = await prisma.account.create({
         data: { name, ownerId, balance, createdAt: new Date() },
@@ -16,7 +20,7 @@ export default class AccountModel {
     }
   }
 
-  static async getById(id: number) {
+  static async getById(id: number): Promise<AccountReqBody | null> {
     try {
       const account = await prisma.account.findUnique({
         where: { id },
@@ -28,7 +32,7 @@ export default class AccountModel {
     }
   }
 
-  static async get() {
+  static async get(): Promise<AccountReqBody[]> {
     try {
       const account = await prisma.account.findMany();
       return account;
@@ -38,7 +42,10 @@ export default class AccountModel {
     }
   }
 
-  static async update(id: number, payload: partialReqBody) {
+  static async update(
+    id: number,
+    payload: partialReqBody
+  ): Promise<AccountReqBody> {
     try {
       const account = await prisma.account.update({
         where: { id },
@@ -51,7 +58,7 @@ export default class AccountModel {
     }
   }
 
-  static async delete(id: number) {
+  static async delete(id: number): Promise<AccountReqBody> {
     try {
       const account = await prisma.account.update({
         where: { id },
@@ -64,7 +71,9 @@ export default class AccountModel {
     }
   }
 
-  static async getTrxByAccount(accountId: number) {
+  static async getTrxByAccount(
+    accountId: number
+  ): Promise<TransactionReqBody[]> {
     try {
       const transactions = await prisma.transaction.findMany({
         where: {

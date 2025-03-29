@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import TransactionModel from "src/model/transaction.model";
+import { z } from "zod";
+import { transactionSchema } from "src/validation/transaction.validation";
 
 export default class TransactionController {
   static async create(
@@ -23,27 +25,15 @@ export default class TransactionController {
       return;
     }
 
-    if (!fromAccountId || !toAccountId || !amount) {
-      res.status(400).json({ error: "Missing required fields" });
+    const validatedData = transactionSchema.parse(req.body);
+
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(401).json({ error: "User not authenticated" });
       return;
     }
 
-    if (
-      isNaN(+fromAccountId) ||
-      +fromAccountId <= 0 ||
-      isNaN(+toAccountId) ||
-      +toAccountId <= 0 ||
-      isNaN(+amount) ||
-      +amount <= 0
-    ) {
-      res.status(400).json({ error: "All fields must be positive numbers" });
-      return;
-    }
-
-    if (fromAccountId === toAccountId) {
-      res.status(400).json({ error: "Cannot transfer to the same account" });
-      return;
-    }
     try {
       const createTransaction = await TransactionModel.create(
         +fromAccountId,
@@ -53,6 +43,12 @@ export default class TransactionController {
       );
       res.status(201).json({ createTransaction });
     } catch (error) {
+      console.log(error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: error.errors });
+        return;
+      }
+
       res.status(500).json({ error: "somwething went wrong" });
     }
   }
@@ -64,6 +60,13 @@ export default class TransactionController {
       });
       return;
     }
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(401).json({ error: "User not authenticated" });
+      return;
+    }
+
     try {
       const getTransaction = await TransactionModel.getByTrxId(+id);
       console.log(getTransaction);

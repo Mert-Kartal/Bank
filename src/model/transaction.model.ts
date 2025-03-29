@@ -1,4 +1,5 @@
-import prisma from "src/db";
+import prisma from "src/config/db";
+import { TransactionReqBody } from "src/dto/types";
 
 export default class TransactionModel {
   // todo;
@@ -7,7 +8,7 @@ export default class TransactionModel {
     toAccountId: number,
     amount: number,
     userId: number
-  ) {
+  ): Promise<TransactionReqBody> {
     try {
       return await prisma.$transaction(async (tx) => {
         const fromAccount = await tx.account.findUnique({
@@ -49,7 +50,7 @@ export default class TransactionModel {
     }
   }
 
-  static async getByTrxId(id: number) {
+  static async getByTrxId(id: number): Promise<TransactionReqBody | null> {
     try {
       const trx = await prisma.transaction.findUnique({ where: { id } });
       return trx;

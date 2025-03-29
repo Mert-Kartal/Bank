@@ -1,29 +1,38 @@
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { Request, Response } from "express";
 import AccountModel from "src/model/account.model";
+import { accountSchema } from "src/validation/account.validation";
+import { z } from "zod";
+
 export default class AccountController {
   static async create(
-    req: Request<{}, {}, { name: string; ownerId: string; balance: string }>,
+    req: Request<{}, {}, { name: string; balance: string }>,
     res: Response
   ) {
-    if (Object.keys(req.body).length < 3) {
-      res.status(400).json({
-        error: "missing data",
-      });
+    const { name, balance } = req.body;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(401).json({ error: "User not authenticated" });
       return;
     }
-    const { name, ownerId, balance } = req.body;
+
+    const validatedData = accountSchema.parse(req.body);
     try {
-      if (isNaN(+ownerId) || isNaN(+balance)) {
+      if (isNaN(+balance)) {
         res.status(400).json({
           error: "invalid data",
         });
         return;
       }
-      const createAccount = await AccountModel.create(name, +ownerId, +balance);
+      const createAccount = await AccountModel.create(name, userId, +balance);
       res.status(201).json({ createAccount });
     } catch (error) {
       console.log(error);
+      if (error instanceof z.ZodError) {
+        res.status(400).json({ error: error.errors });
+        return;
+      }
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === "P2003") {
           res.status(404).json({
@@ -38,6 +47,13 @@ export default class AccountController {
 
   static async getById(req: Request<{ id: string }>, res: Response) {
     const id = req.params.id;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(401).json({ error: "User not authenticated" });
+      return;
+    }
+
     try {
       if (id === ":id" || isNaN(+id)) {
         res.status(400).json({
@@ -65,6 +81,13 @@ export default class AccountController {
   ) {
     const id = req.params.id;
     const { amount } = req.body;
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(401).json({ error: "User not authenticated" });
+      return;
+    }
+
     try {
       if (id === ":id" || isNaN(+id)) {
         res.status(400).json({
@@ -102,7 +125,14 @@ export default class AccountController {
     res: Response
   ) {
     const id = req.params.id;
+    const userId = req.user?.id;
     const { amount } = req.body;
+
+    if (!userId) {
+      res.status(401).json({ error: "User not authenticated" });
+      return;
+    }
+
     try {
       if (id === ":id" || isNaN(+id)) {
         res.status(400).json({
@@ -145,7 +175,14 @@ export default class AccountController {
     res: Response
   ) {
     const id = req.params.id;
+    const userId = req.user?.id;
     const { name } = req.body;
+
+    if (!userId) {
+      res.status(401).json({ error: "User not authenticated" });
+      return;
+    }
+
     try {
       if (id === ":id" || isNaN(+id)) {
         res.status(400).json({
@@ -184,6 +221,13 @@ export default class AccountController {
       });
       return;
     }
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(401).json({ error: "User not authenticated" });
+      return;
+    }
+
     try {
       const deletedUser = await AccountModel.delete(+id);
 
@@ -211,6 +255,13 @@ export default class AccountController {
       });
       return;
     }
+    const userId = req.user?.id;
+
+    if (!userId) {
+      res.status(401).json({ error: "User not authenticated" });
+      return;
+    }
+
     try {
       const getAccountTransactions = await AccountModel.getTrxByAccount(+id);
       if (getAccountTransactions.length === 0) {

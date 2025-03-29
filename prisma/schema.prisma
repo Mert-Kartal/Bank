@@ -14,13 +14,14 @@ datasource db {
 }
 
 model User {
-  id          Int           @id @default(autoincrement())
-  firstname   String
-  lastname    String
-  username    String        @unique
-  password    String
-  createdAt   DateTime      @default(now())
-  deletedAt   DateTime?
+  id        Int       @id @default(autoincrement())
+  firstname String
+  lastname  String
+  username  String    @unique
+  password  String
+  createdAt DateTime  @default(now())
+  deletedAt DateTime?
+
   Account     Account[]
   Transaction Transaction[]
 }
@@ -32,8 +33,8 @@ model Account {
   balance   Float     @default(0)
   createdAt DateTime  @default(now())
   deletedAt DateTime?
-  owner     User      @relation(fields: [ownerId], references: [id])
 
+  owner            User          @relation(fields: [ownerId], references: [id])
   transactionsFrom Transaction[] @relation("FromAccount")
   transactionsTo   Transaction[] @relation("ToAccount")
 }

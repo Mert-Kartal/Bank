@@ -1,12 +1,8 @@
-import prisma from "src/db";
-import bcrypt from "bcrypt";
+import prisma from "src/config/db";
 
-import { UserReqBody } from "src/types";
+import { UserReqBody, AccountReqBody, TransactionReqBody } from "src/dto/types";
 type partialReqBody = Partial<UserReqBody>;
 
-async function hashPassword(password: string): Promise<string> {
-  return await bcrypt.hash(password, 10);
-}
 export default class UserModel {
   static async create(
     firstname: string,
@@ -15,13 +11,12 @@ export default class UserModel {
     password: string
   ): Promise<UserReqBody> {
     try {
-      const hashedPassword = await hashPassword(password);
       const user = await prisma.user.create({
         data: {
           firstname,
           lastname,
           username,
-          password: hashedPassword,
+          password,
           createdAt: new Date(),
         },
       });
@@ -32,7 +27,7 @@ export default class UserModel {
     }
   }
 
-  static async getById(id: number) {
+  static async getById(id: number): Promise<UserReqBody | null> {
     try {
       const user = await prisma.user.findUnique({
         where: { id },
@@ -44,7 +39,18 @@ export default class UserModel {
     }
   }
 
-  static async get() {
+  static async getByUsername(username: string) {
+    try {
+      const user = await prisma.user.findUnique({
+        where: { username },
+      });
+      return user;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  static async get(): Promise<UserReqBody[]> {
     try {
       const users = await prisma.user.findMany();
       return users;
@@ -70,7 +76,7 @@ export default class UserModel {
     }
   }
 
-  static async delete(id: number) {
+  static async delete(id: number): Promise<UserReqBody> {
     try {
       const user = await prisma.user.update({
         where: { id },
@@ -83,7 +89,7 @@ export default class UserModel {
     }
   }
 
-  static async getTrxByUser(id: number) {
+  static async getTrxByUser(id: number): Promise<TransactionReqBody[]> {
     try {
       const userAccounts = await prisma.account.findMany({
         where: { ownerId: id },
@@ -111,7 +117,7 @@ export default class UserModel {
     }
   }
 
-  static async getAccByUser(userId: number) {
+  static async getAccByUser(userId: number): Promise<AccountReqBody[]> {
     try {
       const accounts = await prisma.account.findMany({
         where: { ownerId: userId },
