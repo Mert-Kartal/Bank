@@ -10,7 +10,7 @@ export default class AccountController {
     res: Response
   ) {
     const { name, balance } = req.body;
-    const userId = req.user?.id;
+    const userId = +req.user?.id;
 
     if (!userId) {
       res.status(401).json({ error: "User not authenticated" });
@@ -25,7 +25,7 @@ export default class AccountController {
         });
         return;
       }
-      const createAccount = await AccountModel.create(name, userId, +balance);
+      const createAccount = await AccountModel.create(name, +userId, +balance);
       res.status(201).json({ createAccount });
     } catch (error) {
       console.log(error);
@@ -68,6 +68,12 @@ export default class AccountController {
         res.status(404).json({ error: "no data" });
         return;
       }
+
+      if (getAccount.ownerId !== userId) {
+        res.status(403).json({ error: "Unauthorized Request" });
+        return;
+      }
+
       res.status(200).json({ getAccount });
     } catch (error) {
       console.log(error);
@@ -105,10 +111,16 @@ export default class AccountController {
 
       const getAccount = await AccountModel.getById(+id);
 
-      if (!getAccount) {
+      if (!getAccount || getAccount.deletedAt) {
         res.status(404).json({ error: "no data" });
         return;
       }
+
+      if (getAccount.ownerId !== userId) {
+        res.status(403).json({ error: "Unauthorized Request" });
+        return;
+      }
+
       const updatedBalance = getAccount.balance + +amount;
       const updateAccount = await AccountModel.update(+id, {
         balance: updatedBalance,
@@ -150,8 +162,13 @@ export default class AccountController {
 
       const getAccount = await AccountModel.getById(+id);
 
-      if (!getAccount) {
+      if (!getAccount || getAccount.deletedAt) {
         res.status(404).json({ error: "no data" });
+        return;
+      }
+
+      if (getAccount.ownerId !== userId) {
+        res.status(403).json({ error: "Unauthorized Request" });
         return;
       }
 
@@ -197,6 +214,19 @@ export default class AccountController {
         });
         return;
       }
+
+      const getAccount = await AccountModel.getById(+id);
+
+      if (!getAccount || getAccount.deletedAt) {
+        res.status(404).json({ error: "no data" });
+        return;
+      }
+
+      if (getAccount.ownerId !== userId) {
+        res.status(403).json({ error: "Unauthorized Request" });
+        return;
+      }
+
       const updateAccount = await AccountModel.update(+id, { name });
       res.status(200).json({ updateAccount });
     } catch (error) {
@@ -229,6 +259,18 @@ export default class AccountController {
     }
 
     try {
+      const getAccount = await AccountModel.getById(+id);
+
+      if (!getAccount || getAccount.deletedAt) {
+        res.status(404).json({ error: "no data" });
+        return;
+      }
+
+      if (getAccount.ownerId !== userId) {
+        res.status(403).json({ error: "Unauthorized Request" });
+        return;
+      }
+
       const deletedUser = await AccountModel.delete(+id);
 
       res.status(200).json({ deletedUser });
@@ -263,6 +305,18 @@ export default class AccountController {
     }
 
     try {
+      const getAccount = await AccountModel.getById(+id);
+
+      if (!getAccount || getAccount.deletedAt) {
+        res.status(404).json({ error: "no data" });
+        return;
+      }
+
+      if (getAccount.ownerId !== userId) {
+        res.status(403).json({ error: "Unauthorized Request" });
+        return;
+      }
+
       const getAccountTransactions = await AccountModel.getTrxByAccount(+id);
       if (getAccountTransactions.length === 0) {
         res.status(404).json({ error: "no data" });
@@ -270,6 +324,9 @@ export default class AccountController {
       }
 
       res.status(200).json({ getAccountTransactions });
-    } catch (error) {}
+    } catch (error) {
+      console.log(error);
+      res.status(500).json({ error: "somwething went wrong" });
+    }
   }
 }

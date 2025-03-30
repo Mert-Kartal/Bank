@@ -10,15 +10,7 @@ import { z } from "zod";
 type partialReqBody = Partial<UserReqBody>;
 
 export default class UserController {
-  static async getById(req: Request<{ id: string }>, res: Response) {
-    const id = req.params.id;
-
-    if (id === ":id" || isNaN(+id)) {
-      res.status(400).json({
-        error: "invalid id",
-      });
-      return;
-    }
+  static async getUser(req: Request, res: Response) {
     const userId = req.user?.id;
 
     if (!userId) {
@@ -27,7 +19,7 @@ export default class UserController {
     }
 
     try {
-      const getUser = await UserModel.getById(+id);
+      const getUser = await UserModel.getUser(+userId);
 
       if (!getUser || getUser.deletedAt) {
         res.status(404).json({ error: "no data" });
@@ -65,21 +57,12 @@ export default class UserController {
 
   static async update(
     req: Request<
-      { id: string },
+      {},
       {},
       { firstname?: string; lastname?: string; username?: string }
     >,
     res: Response
   ) {
-    const id = req.params.id;
-
-    if (id === ":id" || isNaN(+id)) {
-      res.status(400).json({
-        error: "invalid id",
-      });
-      return;
-    }
-
     const validatedData = userUpdateSchema.parse(req.body);
 
     const whiteList = ["firstname", "lastname", "username"] as const;
@@ -102,7 +85,7 @@ export default class UserController {
       });
 
       console.log(whiteListPayload);
-      const updatedUser = await UserModel.update(+id, whiteListPayload);
+      const updatedUser = await UserModel.update(+userId, whiteListPayload);
       res.status(200).json({ updatedUser });
     } catch (error) {
       console.log(error);
@@ -136,7 +119,7 @@ export default class UserController {
     }
   }
 
-  static async delete(req: Request<{ id: string }>, res: Response) {
+  static async delete(req: Request, res: Response) {
     const userId = req.user?.id;
 
     if (!userId) {
@@ -145,14 +128,7 @@ export default class UserController {
     }
 
     try {
-      const id = req.params.id;
-      if (id === ":id" || isNaN(+id)) {
-        res.status(400).json({
-          error: "invalid id",
-        });
-        return;
-      }
-      const deletedUser = await UserModel.delete(+id);
+      const deletedUser = await UserModel.delete(+userId);
 
       res.status(200).json({ deletedUser });
     } catch (error) {
@@ -170,15 +146,7 @@ export default class UserController {
     }
   }
 
-  static async getTransactions(req: Request<{ id: string }>, res: Response) {
-    const id = req.params.id;
-
-    if (id === ":id" || isNaN(+id)) {
-      res.status(400).json({
-        error: "invalid id",
-      });
-      return;
-    }
+  static async getTransactions(req: Request, res: Response) {
     const userId = req.user?.id;
 
     if (!userId) {
@@ -187,7 +155,7 @@ export default class UserController {
     }
 
     try {
-      const getUserTransactions = await UserModel.getTrxByUser(+id);
+      const getUserTransactions = await UserModel.getTrxByUser(+userId);
 
       if (getUserTransactions.length === 0) {
         res.status(404).json({ error: "no data" });
@@ -201,15 +169,7 @@ export default class UserController {
     }
   }
 
-  static async getAccounts(req: Request<{ id: string }>, res: Response) {
-    const id = req.params.id;
-
-    if (id === ":id" || isNaN(+id)) {
-      res.status(400).json({
-        error: "invalid id",
-      });
-      return;
-    }
+  static async getAccounts(req: Request, res: Response) {
     const userId = req.user?.id;
 
     if (!userId) {
@@ -218,7 +178,7 @@ export default class UserController {
     }
 
     try {
-      const getUserAccounts = await UserModel.getAccByUser(+id);
+      const getUserAccounts = await UserModel.getAccByUser(+userId);
       if (getUserAccounts.length === 0) {
         res.status(404).json({ error: "no data" });
         return;

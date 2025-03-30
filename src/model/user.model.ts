@@ -27,7 +27,7 @@ export default class UserModel {
     }
   }
 
-  static async getById(id: number): Promise<UserReqBody | null> {
+  static async getUser(id: number): Promise<UserReqBody | null> {
     try {
       const user = await prisma.user.findUnique({
         where: { id },

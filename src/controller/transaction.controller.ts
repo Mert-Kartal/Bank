@@ -9,7 +9,6 @@ export default class TransactionController {
       { id: string },
       {},
       {
-        fromAccountId: string;
         toAccountId: string;
         amount: string;
       }
@@ -17,7 +16,7 @@ export default class TransactionController {
     res: Response
   ) {
     const id = req.params.id;
-    const { fromAccountId, toAccountId, amount } = req.body;
+    const { toAccountId, amount } = req.body;
     if (id === ":id" || isNaN(+id)) {
       res.status(400).json({
         error: "invalid id",
@@ -34,9 +33,15 @@ export default class TransactionController {
       return;
     }
 
+    if (userId === toAccountId) {
+      res
+        .status(400)
+        .json({ error: "Can not make transaction into your own account" });
+    }
+
     try {
       const createTransaction = await TransactionModel.create(
-        +fromAccountId,
+        +userId,
         +toAccountId,
         +amount,
         +id
@@ -72,6 +77,14 @@ export default class TransactionController {
       console.log(getTransaction);
       if (!getTransaction) {
         res.status(404).json({ error: "no data" });
+        return;
+      }
+
+      if (
+        getTransaction.fromAccountId !== userId ||
+        getTransaction.toAccountId !== userId
+      ) {
+        res.status(403).json({ error: "User not authenticated" });
         return;
       }
       res.status(200).json({ getTransaction });
