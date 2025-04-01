@@ -1,38 +1,24 @@
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { Request, Response } from "express";
 import AccountModel from "src/model/account.model";
-import { accountSchema } from "src/validation/account.validation";
-import { z } from "zod";
 
 export default class AccountController {
   static async create(
     req: Request<{}, {}, { name: string; balance: string }>,
     res: Response
   ) {
-    const { name, balance } = req.body;
-    const userId = +req.user?.id;
+    const userId = req.user?.id;
 
     if (!userId) {
       res.status(401).json({ error: "User not authenticated" });
       return;
     }
+    const { name, balance } = req.body;
 
-    const validatedData = accountSchema.parse(req.body);
     try {
-      if (isNaN(+balance)) {
-        res.status(400).json({
-          error: "invalid data",
-        });
-        return;
-      }
       const createAccount = await AccountModel.create(name, +userId, +balance);
       res.status(201).json({ createAccount });
     } catch (error) {
-      console.log(error);
-      if (error instanceof z.ZodError) {
-        res.status(400).json({ error: error.errors });
-        return;
-      }
       if (error instanceof PrismaClientKnownRequestError) {
         if (error.code === "P2003") {
           res.status(404).json({
@@ -110,7 +96,7 @@ export default class AccountController {
       }
 
       const getAccount = await AccountModel.getById(+id);
-
+      console.log(getAccount);
       if (!getAccount || getAccount.deletedAt) {
         res.status(404).json({ error: "no data" });
         return;
@@ -161,7 +147,7 @@ export default class AccountController {
       }
 
       const getAccount = await AccountModel.getById(+id);
-
+      console.log(getAccount);
       if (!getAccount || getAccount.deletedAt) {
         res.status(404).json({ error: "no data" });
         return;
@@ -173,7 +159,7 @@ export default class AccountController {
       }
 
       if (+amount > getAccount.balance) {
-        res.status(404).json({ error: "insufficient funds" });
+        res.status(422).json({ error: "insufficient funds" });
         return;
       }
       const updatedBalance = getAccount.balance - +amount;

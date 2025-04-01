@@ -6,9 +6,7 @@ import UserModel from "src/model/user.model";
 import dotenv from "dotenv";
 dotenv.config();
 
-const jwtSecret = process.env.JWT_SECRET
-  ? process.env.JWT_SECRET
-  : "secret_key";
+const jwtSecret = process.env.JWT_SECRET!;
 
 export default class authController {
   static async register(
@@ -67,7 +65,7 @@ export default class authController {
     try {
       const user = await UserModel.getByUsername(username);
 
-      if (!user) {
+      if (!user || user.deletedAt) {
         res.status(400).json({ error: "Invalid username or password" });
         return;
       }
@@ -79,7 +77,7 @@ export default class authController {
         return;
       }
 
-      const token = jwt.sign({ userId: user.id }, "your_secret_key", {
+      const token = jwt.sign({ userId: user.id }, jwtSecret, {
         expiresIn: "1h",
       });
 

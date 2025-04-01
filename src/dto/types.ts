@@ -30,7 +30,9 @@ export interface TransactionReqBody {
 declare global {
   namespace Express {
     interface Request {
-      user?: any; //TODO
+      user?: {
+        id: number;
+      };
     }
   }
 }

@@ -3,11 +3,15 @@ import { registerSchema } from "src/validation/register.validation";
 import { loginSchema } from "src/validation/login.validation";
 import jwt from "jsonwebtoken";
 
-const jwtSecret = process.env.JWT_SECRET
-  ? process.env.JWT_SECRET
-  : "secret_key";
+const jwtSecret = process.env.JWT_SECRET!;
 
-export default class middleware {
+interface JwtPayload {
+  userId: number;
+  iat: number;
+  exp: number;
+}
+
+export default class authmiddleware {
   static validateRegister(req: Request, res: Response, next: NextFunction) {
     const result = registerSchema.safeParse(req.body);
 
@@ -29,18 +33,15 @@ export default class middleware {
     next();
   }
   static authenticate(req: Request, res: Response, next: NextFunction) {
-    const token = req.headers["authorization"]?.split(" ")[1];
-
+    const token = req.header(`Authorization`)?.replace("Bearer ", "");
     if (!token) {
       res.status(401).json({ error: "Authentication required" });
       return;
     }
 
     try {
-      const decoded = jwt.verify(token, jwtSecret as string);
-
-      req.user = decoded;
-
+      const decoded = jwt.verify(token, jwtSecret) as JwtPayload;
+      req.user = { id: decoded.userId };
       next();
     } catch (error) {
       console.error(error);

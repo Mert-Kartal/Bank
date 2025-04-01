@@ -2,7 +2,6 @@ import prisma from "src/config/db";
 import { TransactionReqBody } from "src/dto/types";
 
 export default class TransactionModel {
-  // todo;
   static async create(
     fromAccountId: number,
     toAccountId: number,

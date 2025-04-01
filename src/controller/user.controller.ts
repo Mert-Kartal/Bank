@@ -12,7 +12,7 @@ type partialReqBody = Partial<UserReqBody>;
 export default class UserController {
   static async getUser(req: Request, res: Response) {
     const userId = req.user?.id;
-
+    console.log(userId)
     if (!userId) {
       res.status(401).json({ error: "User not authenticated" });
       return;
@@ -78,7 +78,7 @@ export default class UserController {
       const whiteListPayload: partialReqBody = {};
 
       whiteList.forEach((fieldName) => {
-        const value = req.body[fieldName as keyof typeof req.body];
+        const value = req.body[fieldName as keyof typeof validatedData];
         if (value) {
           whiteListPayload[fieldName] = value;
         }
